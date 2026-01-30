@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+
 	"shortener/handlers"
+	"shortener/repo"
+	"shortener/service"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -20,14 +23,22 @@ func main() {
 	}
 	defer conn.Close(context.Background())
 
-	h := handlers.New(conn)
-
 	router := gin.Default()
 
+	repo := repo.Repo{
+		DB: conn,
+	}
+	service := service.Service{
+		Repo: repo,
+	}
+	handler := handlers.Handler{
+		Svc: service,
+	}
+
 	router.Use(cors.Default())
-	router.POST("/shorten", h.ShortenLinkHandler)
-	router.GET("/analytics/:link", h.LinkAnalyticsHandler)
-	router.GET("/:link", h.ShortLinkHandler)
+	router.POST("/shorten", handler.ShortenLinkHandler)
+	router.GET("/analytics/:link", handler.LinkAnalyticsHandler)
+	router.GET("/:link", handler.ShortLinkHandler)
 
 	fmt.Println("Сервер запущен")
 	router.Run(":8282")
