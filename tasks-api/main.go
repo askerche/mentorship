@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"tasks-api/handlers"
+	"tasks-api/repo"
+	"tasks-api/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -23,8 +25,16 @@ func main() {
 		return
 	}
 
-	Handler := handlers.Handler{
+	Repo := repo.Repo{
 		DB: conn,
+	}
+
+	Service := service.Service{
+		R: Repo,
+	}
+
+	Handler := handlers.Handler{
+		Svc: Service,
 	}
 
 	router := gin.Default()
