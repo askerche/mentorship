@@ -25,24 +25,16 @@ func main() {
 		return
 	}
 
-	Repo := repo.Repo{
-		DB: conn,
-	}
-
-	Service := service.Service{
-		R: Repo,
-	}
-
-	Handler := handlers.Handler{
-		Svc: Service,
-	}
+	repo := repo.New(conn)
+	svc := service.New(repo)
+	handler := handlers.New(svc)
 
 	router := gin.Default()
-	router.GET("/tasks", Handler.GetTasksHandler)
-	router.GET("/tasks/:id", Handler.GetTaskHandler)
-	router.POST("/tasks", Handler.CreateTaskHandler)
-	router.DELETE("/tasks/:id", Handler.DeleteTaskHandler)
-	router.PUT("/tasks/:id", Handler.UpdateTaskHandler)
+	router.GET("/tasks", handler.GetTasksHandler)
+	router.GET("/tasks/:id", handler.GetTaskHandler)
+	router.POST("/tasks", handler.CreateTaskHandler)
+	router.DELETE("/tasks/:id", handler.DeleteTaskHandler)
+	router.PUT("/tasks/:id", handler.UpdateTaskHandler)
 
 	fmt.Println("Запущен")
 	router.Run(":8181")
