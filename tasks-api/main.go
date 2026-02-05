@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"tasks-api/handlers"
+	"tasks-api/repo"
+	"tasks-api/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
@@ -23,16 +25,16 @@ func main() {
 		return
 	}
 
-	Handler := handlers.Handler{
-		DB: conn,
-	}
+	repo := repo.New(conn)
+	svc := service.New(repo)
+	handler := handlers.New(svc)
 
 	router := gin.Default()
-	router.GET("/tasks", Handler.GetTasksHandler)
-	router.GET("/tasks/:id", Handler.GetTaskHandler)
-	router.POST("/tasks", Handler.CreateTaskHandler)
-	router.DELETE("/tasks/:id", Handler.DeleteTaskHandler)
-	router.PUT("/tasks/:id", Handler.UpdateTaskHandler)
+	router.GET("/tasks", handler.GetTasksHandler)
+	router.GET("/tasks/:id", handler.GetTaskHandler)
+	router.POST("/tasks", handler.CreateTaskHandler)
+	router.DELETE("/tasks/:id", handler.DeleteTaskHandler)
+	router.PUT("/tasks/:id", handler.UpdateTaskHandler)
 
 	fmt.Println("Запущен")
 	router.Run(":8181")
