@@ -1,0 +1,31 @@
+services:
+  # 1. ТВОЕ ПРИЛОЖЕНИЕ
+  app:
+    build: .                      # Строим из Dockerfile в этой папке
+    container_name: tasks-app     # Дадим красивое имя
+    ports:
+      - "8080:8080"               # Открываем порт наружу
+    depends_on:
+      - tasks-postgres            # Ждем, пока запустится база
+    environment:
+      # Внутри докера мы обращаемся к базе по имени сервиса (tasks-postgres)
+      # Внимание: внутри докера порт ВСЕГДА 5432 (стандартный), даже если снаружи другой
+      - DATABASE_URL=postgres://postgres:mysecretpassword@tasks-postgres:5432/postgres
+    restart: always
+
+  # 2. БАЗА ДАННЫХ (Замена твоему старому контейнеру tasks)
+  tasks-postgres:
+    image: postgres:15-alpine
+    container_name: tasks-db      # Дадим красивое имя
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"               # Порт для подключения через DBeaver (Host:Container)
+    volumes:
+      - pg_data:/var/lib/postgresql/data # Чтобы данные не стирались при перезапуске
+
+# Том для хранения данных базы
+volumes:
+  pg_data:

@@ -21,7 +21,8 @@ type Repo struct {
 func (r *Repo) CreateTask(ctx context.Context, task models.Task) (int, error) {
 	var id int
 	err := r.db.QueryRow(ctx, `INSERT INTO tasks (title, description, status)
-	 VALUES($1, $2, COALESCE(NULLIF($3, ''), 'new')) RETURNING id`, task.Title, task.Description, task.Status).Scan(&id)
+	 VALUES($1, $2, COALESCE(NULLIF($3, ''), 'new')) RETURNING id`,
+		task.Title, task.Description, task.Status).Scan(&id)
 	if err != nil {
 		fmt.Println("error insert to db: ", err)
 		return 0, err
@@ -50,7 +51,9 @@ func (r *Repo) SelectTasks(ctx context.Context) ([]models.Task, error) {
 
 func (r *Repo) SelectTask(ctx context.Context, taskId int) (models.Task, error) {
 	task := models.Task{}
-	err := r.db.QueryRow(ctx, `SELECT id, title, description, status, created_at FROM tasks WHERE id = $1`, taskId).
+	err := r.db.QueryRow(ctx,
+		`SELECT id, title, description, status, created_at FROM tasks WHERE id = $1`,
+		taskId).
 		Scan(&task.Id, &task.Title, &task.Description, &task.Status, &task.CreatedAt)
 	if err != nil {
 		return models.Task{}, err

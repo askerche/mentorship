@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	connString := "postgres://postgres:mysecretpassword@localhost:5433/postgres"
+	connString := "postgres://postgres:mysecretpassword@tasks-postgres:5432/postgres"
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, connString)
 	if err != nil {
@@ -37,5 +37,5 @@ func main() {
 	router.PUT("/tasks/:id", handler.UpdateTaskHandler)
 
 	fmt.Println("Запущен")
-	router.Run(":8181")
+	router.Run(":8080")
 }
