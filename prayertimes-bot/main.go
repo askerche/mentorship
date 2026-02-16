@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"prayertimes/client/aladhan"
 	"prayertimes/handler"
 
 	"github.com/go-telegram/bot"
@@ -17,8 +18,11 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
+	aladhanClient := aladhan.New()
+	botHandler := handler.New(aladhanClient)
+
 	opts := []bot.Option{
-		bot.WithDefaultHandler(handler.Handle),
+		bot.WithDefaultHandler(botHandler.Handle),
 	}
 
 	err := godotenv.Load()
