@@ -11,17 +11,18 @@ import (
 
 type Client struct {
 	httpclient http.Client
+	host       string
 }
 
 func New() *Client {
 	return &Client{
 		httpclient: http.Client{},
+		host:       "https://api.aladhan.com/",
 	}
 }
 
 func (c *Client) GetTodayPrayerTimesByCity(ctx context.Context, city string) (models.PrayerTimes, models.Hijri, error) {
-	host := "https://api.aladhan.com/v1/timingsByCity"
-	u, err := url.Parse(host)
+	u, err := url.Parse(c.host + "v1/timingsByCity")
 	if err != nil {
 		return models.PrayerTimes{}, models.Hijri{}, fmt.Errorf("Invalid URL: %w", err)
 	}
