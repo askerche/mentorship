@@ -32,3 +32,8 @@ type Hijri struct {
 type HijriMonth struct {
 	En string `json:"en"`
 }
+
+type PrayerItem struct {
+	Name string
+	Time string
+}
