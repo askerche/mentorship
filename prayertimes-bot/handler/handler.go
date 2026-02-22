@@ -84,25 +84,18 @@ func formatPrayerTimesResp(prayers appModels.PrayerTimes, hijraDate appModels.Hi
 }
 
 func definePrayerStatus(prayerstime []appModels.PrayerItem, now time.Time) (string, string, time.Duration) {
-	nextPrayer := prayerstime[0].Name
+	var nextPrayer string
 	var currentPrayer string
 	var timeRemaining time.Duration
-	for i, k := range prayerstime {
+	for _, k := range prayerstime {
 		parsedTime, _ := time.Parse("15:04", k.Time)
 		prayerTime := time.Date(now.Year(), now.Month(), now.Day(), parsedTime.Hour(), parsedTime.Minute(), 0, 0, now.Location())
 		if now.After(prayerTime) {
 			currentPrayer = k.Name
-			if i+1 < len(prayerstime) {
-				nextPrayer = prayerstime[i+1].Name
-				parsedNextTime, _ := time.Parse("15:04", prayerstime[i+1].Time)
-				nextPrayerTime := time.Date(now.Year(), now.Month(), now.Day(), parsedNextTime.Hour(), parsedNextTime.Minute(), 0, 0, now.Location())
-				timeRemaining = time.Until(nextPrayerTime)
-			} else {
-				nextPrayer = prayerstime[0].Name
-				parsedNextTime, _ := time.Parse("15:04", prayerstime[0].Time)
-				nextPrayerTime := time.Date(now.Year(), now.Month(), now.Day()+1, parsedNextTime.Hour(), parsedNextTime.Minute(), 0, 0, now.Location())
-				timeRemaining = time.Until(nextPrayerTime)
-			}
+		} else {
+			nextPrayer = k.Name
+			timeRemaining = time.Until(prayerTime)
+			break
 		}
 	}
 	return nextPrayer, currentPrayer, timeRemaining
