@@ -29,7 +29,7 @@ func (c *Client) GetTodayPrayerTimesByCity(ctx context.Context, city string) (mo
 	q := u.Query()
 	q.Set("city", city)
 	q.Set("country", "RU")
-	q.Set("method", "3")
+	q.Set("method", "2")
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
@@ -41,6 +41,7 @@ func (c *Client) GetTodayPrayerTimesByCity(ctx context.Context, city string) (mo
 	if err != nil {
 		return models.PrayerTimes{}, models.Hijri{}, fmt.Errorf("Failed to do request: %w", err)
 	}
+	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&apiResp)
 	if err != nil {
 		return models.PrayerTimes{}, models.Hijri{}, fmt.Errorf("Failed to unmarshall json: %w", err)

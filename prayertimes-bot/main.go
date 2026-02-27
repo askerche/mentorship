@@ -12,8 +12,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Send any text message to the bot after the bot has been started
-
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
@@ -24,12 +22,10 @@ func main() {
 	opts := []bot.Option{
 		bot.WithDefaultHandler(botHandler.Handle),
 	}
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
 	b, err := bot.New(os.Getenv("TG_BOT_TOKEN"), opts...)
 	if err != nil {
 		panic(err)

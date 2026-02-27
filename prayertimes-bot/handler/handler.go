@@ -50,55 +50,61 @@ func (h *Handler) Handle(ctx context.Context, b *bot.Bot, update *models.Update)
 }
 
 func formatPrayerTimesResp(prayers appModels.PrayerTimes, hijraDate appModels.Hijri, city string) string {
-	type Prayer struct {
-		Name string
-		Time string
+	prayerstime := []appModels.PrayerItem{
+		{Name: "Фаджр", Time: prayers.Fajr},
+		{Name: "Восход", Time: prayers.Sunrise},
+		{Name: "Зухр", Time: prayers.Dhuhr},
+		{Name: "Аср", Time: prayers.Asr},
+		{Name: "Магриб", Time: prayers.Maghrib},
+		{Name: "Иша", Time: prayers.Isha},
 	}
-	prayerstime := []Prayer{
-		{"Фаджр", prayers.Fajr},
-		{"Восход", prayers.Sunrise},
-		{"Зухр", prayers.Dhuhr},
-		{"Аср", prayers.Asr},
-		{"Магриб", prayers.Maghrib},
-		{"Иша", prayers.Isha},
-	}
-
-	var nextPrayer string
-	var inTime time.Duration
 	today := time.Now().Format("02.01.2006")
 	now := time.Now()
-	for _, k := range prayerstime {
-		parsedTime, _ := time.Parse("15:04", k.Time)
-		prayerTime := time.Date(now.Year(), now.Month(), now.Day(), parsedTime.Hour(), parsedTime.Minute(), 0, 0, now.Location())
-		if now.Before(prayerTime) {
-			inTime = time.Until(prayerTime)
-			nextPrayer = k.Name
-			break
-		}
-	}
 
-	totalSeconds := int(inTime.Seconds())
-	hours := totalSeconds / 3600
-	minutes := (totalSeconds % 3600) / 60
-	TimeToNextPrayer := fmt.Sprintf("(через %dч %dм)", hours, minutes)
+	nextPrayer, currentPrayer, timeRemaining := definePrayerStatus(prayerstime, now)
+	TimeToNextPrayer := formatTimeToNextPrayer(timeRemaining)
 
 	var prayersResp string
 	for _, k := range prayerstime {
 		prayer := fmt.Sprintf("%s: %s", k.Name, k.Time)
-		if k.Name == nextPrayer {
-			prayer = fmt.Sprintf("<b>%s</b> %s\n", prayer, TimeToNextPrayer)
-		} else {
+		switch k.Name {
+		case currentPrayer:
+			prayer = fmt.Sprintf("<b>%s</b>\n", prayer)
+		case nextPrayer:
+			prayer = fmt.Sprintf("<code>%s</code> %s\n", prayer, TimeToNextPrayer)
+		default:
 			prayer = fmt.Sprintf("<code>%s</code>\n", prayer)
 		}
 		prayersResp += prayer
 	}
-
-	timings := fmt.Sprintf(
-		"Расписание на %s\n\n"+"%s",
-		today,
-		prayersResp,
-	)
+	timings := fmt.Sprintf("Расписание на %s\n\n"+"%s", today, prayersResp)
 	resp := fmt.Sprintf("Город: <b>%s</b>\n%s\n%s %s %s",
 		city, timings, hijraDate.Day, hijraDate.Month.En, hijraDate.Year)
 	return resp
+}
+
+func definePrayerStatus(prayerstime []appModels.PrayerItem, now time.Time) (string, string, time.Duration) {
+	var nextPrayer string
+	var currentPrayer string
+	var timeRemaining time.Duration
+	for _, k := range prayerstime {
+		parsedTime, _ := time.Parse("15:04", k.Time)
+		prayerTime := time.Date(now.Year(), now.Month(), now.Day(), parsedTime.Hour(), parsedTime.Minute(), 0, 0, now.Location())
+		if now.After(prayerTime) {
+			currentPrayer = k.Name
+		} else {
+			nextPrayer = k.Name
+			timeRemaining = time.Until(prayerTime)
+			break
+		}
+	}
+	return nextPrayer, currentPrayer, timeRemaining
+}
+
+func formatTimeToNextPrayer(timeRemaining time.Duration) string {
+	totalSeconds := int(timeRemaining.Seconds())
+	hours := totalSeconds / 3600
+	minutes := (totalSeconds % 3600) / 60
+	TimeToNextPrayer := fmt.Sprintf("(через %dч %dм)", hours, minutes)
+	return TimeToNextPrayer
 }
