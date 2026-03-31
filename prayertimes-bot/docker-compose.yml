@@ -1,0 +1,25 @@
+services:
+  # 1. ТВОЕ ПРИЛОЖЕНИЕ
+  bot:
+    build: .                      
+    container_name: prayertimes-bot                              
+    environment:
+      - REDIS_ADDR=redis:6379
+      - TZ=Europe/Moscow
+    depends_on:
+      - redis 
+    restart: unless-stopped
+
+  # 2. БАЗА ДАННЫХ REDIS
+  redis:
+    image: redis:alpine
+    container_name: prayertimes_redis
+    restart: unless-stopped 
+    ports:
+      - "6379:6379"               # Порт для подключения
+    volumes:
+      - redis_data:/data # Чтобы данные не стирались при перезапуске
+
+# Том для хранения данных базы
+volumes:
+  redis_data:
