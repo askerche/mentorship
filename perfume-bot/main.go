@@ -36,13 +36,20 @@ func main() {
 	updatesHandler := handler.New(repo)
 
 	opts := []bot.Option{
-		bot.WithDefaultHandler(updatesHandler.All),
+		bot.WithDefaultHandler(updatesHandler.DefaultHandler),
 	}
 
 	b, err := bot.New(os.Getenv("TG_BOT_TOKEN"), opts...)
 	if err != nil {
 		panic(err)
 	}
+	b.RegisterHandler(bot.HandlerTypeMessageText, "start", bot.MatchTypeCommand, updatesHandler.StartHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "catalog", bot.MatchTypeExact, updatesHandler.CatalogCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "categories", bot.MatchTypeExact, updatesHandler.CategoriesCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "brands", bot.MatchTypeExact, updatesHandler.BrandsCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "category_id:", bot.MatchTypePrefix, updatesHandler.CategoryProductsCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "brand_id:", bot.MatchTypePrefix, updatesHandler.BrandProductsCallbackHandler)
+
 	botUser, err := b.GetMe(ctx)
 	if err != nil {
 		log.Fatalf("Error bot get me: %v", err)
