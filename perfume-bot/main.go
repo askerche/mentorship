@@ -5,10 +5,12 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"perfume-bot/api"
 	"perfume-bot/handler"
 	"perfume-bot/repository"
 
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -35,6 +37,15 @@ func main() {
 	repo := repository.New(pool)
 	updatesHandler := handler.New(repo)
 
+	apiServer := api.New(repo)
+	go func() {
+		log.Println("API сервер запущен на порту :8181")
+		err := apiServer.Run()
+		if err != nil {
+			log.Fatal("Ошибка API сервера: %v", err)
+		}
+	}()
+
 	opts := []bot.Option{
 		bot.WithDefaultHandler(updatesHandler.DefaultHandler),
 	}
@@ -44,11 +55,22 @@ func main() {
 		panic(err)
 	}
 	b.RegisterHandler(bot.HandlerTypeMessageText, "start", bot.MatchTypeCommand, updatesHandler.StartHandler)
-	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "catalog", bot.MatchTypeExact, updatesHandler.CatalogCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "main_menu", bot.MatchTypeExact, updatesHandler.StartHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "cart", bot.MatchTypeExact, updatesHandler.CartCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "catalog:", bot.MatchTypePrefix, updatesHandler.CatalogCallbackHandler)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "categories", bot.MatchTypeExact, updatesHandler.CategoriesCallbackHandler)
-	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "brands", bot.MatchTypeExact, updatesHandler.BrandsCallbackHandler)
-	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "category_id:", bot.MatchTypePrefix, updatesHandler.CategoryProductsCallbackHandler)
-	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "brand_id:", bot.MatchTypePrefix, updatesHandler.BrandProductsCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "brands:", bot.MatchTypePrefix, updatesHandler.BrandsCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "cart_add:", bot.MatchTypePrefix, updatesHandler.AddToCartCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "cp:", bot.MatchTypePrefix, updatesHandler.CategoryProductsCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "bp:", bot.MatchTypePrefix, updatesHandler.BrandProductsCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "p:", bot.MatchTypePrefix, updatesHandler.ProductCardCallbackHandler)
+	b.RegisterHandlerMatchFunc(
+		func(update *models.Update) bool {
+			// Это условие (MatchFunc) говорит: "Если пришло сообщение И в нем есть фото - отправляй в PhotoInterceptorHandler"
+			return update.Message != nil && len(update.Message.Photo) > 0
+		},
+		updatesHandler.PhotoInterceptorHandler,
+	)
 
 	botUser, err := b.GetMe(ctx)
 	if err != nil {

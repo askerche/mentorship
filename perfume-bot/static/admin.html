@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель парфюмерного магазина</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: #1a1a2e;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+            color: #333;
+        }
+        .tab-btn.active {
+            background: #1a1a2e;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 0 8px 8px 8px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #4338ca;
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        tr:hover {
+            background: #f9fafb;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            font-size: 20px;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+        .toast.show {
+            transform: translateX(0);
+        }
+        .toast-success {
+            background: #10b981;
+        }
+        .toast-error {
+            background: #ef4444;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Админ-панель</h1>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="products">Товары</button>
+            <button class="tab-btn" data-tab="brands">Бренды</button>
+        </div>
+
+        <div id="products" class="tab-content active">
+            <div class="section-header">
+                <h2>Товары</h2>
+                <button class="btn btn-primary" onclick="openProductModal()">+ Добавить товар</button>
+            </div>
+            <div id="productsTable">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+
+        <div id="brands" class="tab-content">
+            <div class="section-header">
+                <h2>Бренды</h2>
+                <button class="btn btn-primary" onclick="openBrandModal()">+ Добавить бренд</button>
+            </div>
+            <div id="brandsTable">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="productModalTitle">Добавить товар</h2>
+                <button class="close-btn" onclick="closeProductModal()">&times;</button>
+            </div>
+            <form id="productForm" onsubmit="saveProduct(event)">
+                <input type="hidden" id="productId">
+                <div class="form-group">
+                    <label>Бренд</label>
+                    <select id="productBrand" required>
+                        <option value="">Выберите бренд</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Категория</label>
+                    <select id="productCategory" required>
+                        <option value="">Загрузка категорий...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" id="productTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Цена (руб.)</label>
+                    <input type="number" id="productPrice" required min="0">
+                </div>
+                <div class="form-group">
+                    <label>Описание</label>
+                    <textarea id="productDescription"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeProductModal()">Отмена</button>
+                    <button type="submit" class="btn btn-success">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="brandModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="brandModalTitle">Добавить бренд</h2>
+                <button class="close-btn" onclick="closeBrandModal()">&times;</button>
+            </div>
+            <form id="brandForm" onsubmit="saveBrand(event)">
+                <input type="hidden" id="brandId">
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" id="brandTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Описание</label>
+                    <textarea id="brandDescription"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeBrandModal()">Отмена</button>
+                    <button type="submit" class="btn btn-success">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let brands = [];
+        let categories = []; // ДОБАВЛЕНО: Массив для хранения категорий
+        let products = [];
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        async function loadBrands() {
+            try {
+                const res = await fetch('/api/brands');
+                const data = await res.json();
+                brands = data.data || [];
+                renderBrands();
+                updateBrandSelect();
+            } catch (e) {
+                showToast('Ошибка загрузки брендов', 'error');
+            }
+        }
+
+        // ДОБАВЛЕНО: Загрузка категорий с сервера
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/categories');
+                const data = await res.json();
+                categories = data.data || [];
+                updateCategorySelect();
+            } catch (e) {
+                showToast('Ошибка загрузки категорий', 'error');
+            }
+        }
+
+        function renderBrands() {
+            const container = document.getElementById('brandsTable');
+            if (brands.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет брендов. Добавьте первый бренд!</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>ID</th><th>Название</th><th>Описание</th><th>Действия</th></tr></thead><tbody>';
+            brands.forEach(brand => {
+                html += `<tr>
+                    <td>${brand.ID}</td>
+                    <td>${brand.Title}</td>
+                    <td>${brand.Description || '-'}</td>
+                    <td class="actions-cell">
+                        <button class="btn btn-primary btn-sm" onclick="editBrand(${brand.ID})">Изменить</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteBrand(${brand.ID})">Удалить</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function updateBrandSelect() {
+            const select = document.getElementById('productBrand');
+            select.innerHTML = '<option value="">Выберите бренд</option>';
+            brands.forEach(brand => {
+                select.innerHTML += `<option value="${brand.ID}">${brand.Title}</option>`;
+            });
+        }
+
+        // ДОБАВЛЕНО: Отрисовка options для селектора категорий
+        function updateCategorySelect() {
+            const select = document.getElementById('productCategory');
+            select.innerHTML = '<option value="">Выберите категорию</option>';
+            categories.forEach(category => {
+                select.innerHTML += `<option value="${category.ID}">${category.Title}</option>`;
+            });
+        }
+
+        async function loadProducts() {
+            try {
+                const res = await fetch('/api/products?limit=1000&offset=0');
+                const data = await res.json();
+                products = data.data || [];
+                renderProducts();
+            } catch (e) {
+                showToast('Ошибка загрузки товаров', 'error');
+            }
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('productsTable');
+            if (products.length === 0) {
+                container.innerHTML = '<div class="empty-state">Нет товаров. Добавьте первый товар!</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>ID</th><th>Название</th><th>Бренд</th><th>Цена</th><th>Описание</th><th>Действия</th></tr></thead><tbody>';
+            products.forEach(product => {
+                html += `<tr>
+                    <td>${product.ID}</td>
+                    <td>${product.Title}</td>
+                    <td>${(product.Brand && product.Brand.Title) || '-'}</td>
+                    <td>${product.Price} руб.</td>
+                    <td>${product.Description ? product.Description.substring(0, 50) + (product.Description.length > 50 ? '...' : '') : '-'}</td>
+                    <td class="actions-cell">
+                        <button class="btn btn-primary btn-sm" onclick="editProduct(${product.ID})">Изменить</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.ID})">Удалить</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function openProductModal(product = null) {
+            document.getElementById('productModal').classList.add('active');
+            if (product) {
+                document.getElementById('productModalTitle').textContent = 'Изменить товар';
+                document.getElementById('productId').value = product.ID;
+                document.getElementById('productBrand').value = product.Brand?.ID || '';
+                // При редактировании сбрасываем категорию (т.к. наш API пока не отдает категорию в списке товаров)
+                document.getElementById('productCategory').value = ''; 
+                document.getElementById('productTitle').value = product.Title;
+                document.getElementById('productPrice').value = product.Price;
+                document.getElementById('productDescription').value = product.Description || '';
+            } else {
+                document.getElementById('productModalTitle').textContent = 'Добавить товар';
+                document.getElementById('productForm').reset();
+                document.getElementById('productId').value = '';
+                document.getElementById('productBrand').value = '';
+                document.getElementById('productCategory').value = '';
+            }
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.remove('active');
+        }
+
+        function openBrandModal(brand = null) {
+            document.getElementById('brandModal').classList.add('active');
+            if (brand) {
+                document.getElementById('brandModalTitle').textContent = 'Изменить бренд';
+                document.getElementById('brandId').value = brand.ID;
+                document.getElementById('brandTitle').value = brand.Title;
+                document.getElementById('brandDescription').value = brand.Description || '';
+            } else {
+                document.getElementById('brandModalTitle').textContent = 'Добавить бренд';
+                document.getElementById('brandForm').reset();
+                document.getElementById('brandId').value = '';
+            }
+        }
+
+        function closeBrandModal() {
+            document.getElementById('brandModal').classList.remove('active');
+        }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('productId').value;
+            
+            // ИЗМЕНЕНО: Добавлен category_id в объект data
+            const data = {
+                brand_id: parseInt(document.getElementById('productBrand').value),
+                category_id: parseInt(document.getElementById('productCategory').value),
+                title: document.getElementById('productTitle').value,
+                price: parseInt(document.getElementById('productPrice').value),
+                description: document.getElementById('productDescription').value
+            };
+
+            try {
+                let url = '/api/products';
+                let method = 'POST';
+                if (id) {
+                    url = `/api/products/${id}`;
+                    method = 'PUT';
+                }
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error('Error');
+                showToast(id ? 'Товар обновлен' : 'Товар добавлен', 'success');
+                closeProductModal();
+                loadProducts();
+            } catch (e) {
+                showToast('Ошибка сохранения', 'error');
+            }
+        }
+
+        async function saveBrand(e) {
+            e.preventDefault();
+            const id = document.getElementById('brandId').value;
+            const data = {
+                title: document.getElementById('brandTitle').value,
+                description: document.getElementById('brandDescription').value
+            };
+
+            try {
+                let url = '/api/brands';
+                let method = 'POST';
+                if (id) {
+                    url = `/api/brands/${id}`;
+                    method = 'PUT';
+                }
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error('Error');
+                showToast(id ? 'Бренд обновлен' : 'Бренд добавлен', 'success');
+                closeBrandModal();
+                loadBrands();
+            } catch (e) {
+                showToast('Ошибка сохранения', 'error');
+            }
+        }
+
+        function editProduct(id) {
+            const product = products.find(p => p.ID === id);
+            if (product) openProductModal(product);
+        }
+
+        function editBrand(id) {
+            const brand = brands.find(b => b.ID === id);
+            if (brand) openBrandModal(brand);
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Удалить этот товар?')) return;
+            try {
+                await fetch(`/api/products/${id}`, { method: 'DELETE' });
+                showToast('Товар удален', 'success');
+                loadProducts();
+            } catch (e) {
+                console.error(e);
+                showToast('Ошибка удаления', 'error');
+            }
+        }
+
+        async function deleteBrand(id) {
+            if (!confirm('Удалить этот бренд?')) return;
+            try {
+                await fetch(`/api/brands/${id}`, { method: 'DELETE' });
+                showToast('Бренд удален', 'success');
+                loadBrands();
+            } catch (e) {
+                console.error(e);
+                showToast('Ошибка удаления', 'error');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast toast-${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Вызываем загрузку данных при открытии страницы
+        loadBrands();
+        loadCategories(); // ДОБАВЛЕНО
+        loadProducts();
+    </script>
+</body>
+</html>
