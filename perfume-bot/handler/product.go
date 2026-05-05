@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -57,7 +58,7 @@ func (h *Handler) ProductCardCallbackHandler(ctx context.Context, b *bot.Bot, up
 		kb.InlineKeyboard = [][]models.InlineKeyboardButton{
 			{
 				{
-					Text:         "« 🛒 Добавить в корзину »",
+					Text:         "🛒 Добавить в корзину",
 					CallbackData: fmt.Sprintf("cart_add:%d", productID),
 				},
 			},
@@ -67,7 +68,13 @@ func (h *Handler) ProductCardCallbackHandler(ctx context.Context, b *bot.Bot, up
 					CallbackData: returnCommand,
 				},
 				{
-					Text:         "« 🏠 Главное меню »",
+					Text:         "Перейти в корзину",
+					CallbackData: "cart",
+				},
+			},
+			{
+				{
+					Text:         "🏠 Главное меню",
 					CallbackData: "main_menu",
 				},
 			},
@@ -77,13 +84,33 @@ func (h *Handler) ProductCardCallbackHandler(ctx context.Context, b *bot.Bot, up
 			product.Brand.Title, product.Title, product.Price, product.Description,
 		)
 		if product.ImageFileID != "" {
-			b.SendPhoto(ctx, &bot.SendPhotoParams{
-				ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-				Photo:       &models.InputFileString{Data: product.ImageFileID},
-				Caption:     caption,
-				ParseMode:   models.ParseModeHTML,
-				ReplyMarkup: kb,
-			})
+			resp, err := http.Get(product.ImageFileID)
+			if err != nil {
+				log.Printf("[product.ImageFileID] Ошибка скачивания из MinIO: %v", err)
+				b.SendMessage(ctx, &bot.SendMessageParams{
+					ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
+					Text:        "🖼 <i>(Фото скоро появится)</i>\n\n" + caption,
+					ParseMode:   models.ParseModeHTML,
+					ReplyMarkup: kb,
+				})
+			} else {
+				_, err := b.SendPhoto(ctx, &bot.SendPhotoParams{
+					ChatID: update.CallbackQuery.Message.Message.Chat.ID,
+					Photo: &models.InputFileUpload{
+						Filename: "image.png",
+						Data:     resp.Body,
+					},
+					Caption:     caption,
+					ParseMode:   models.ParseModeHTML,
+					ReplyMarkup: kb,
+				})
+
+				resp.Body.Close()
+
+				if err != nil {
+					log.Printf("[product.ImageFileID] Ошибка отправки фото: %v (ImageFileID: %s)", err, product.ImageFileID)
+				}
+			}
 		} else {
 			b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
@@ -92,6 +119,5 @@ func (h *Handler) ProductCardCallbackHandler(ctx context.Context, b *bot.Bot, up
 				ReplyMarkup: kb,
 			})
 		}
-
 	}
 }

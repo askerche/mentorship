@@ -3,137 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ-панель парфюмерного магазина</title>
+    <title>Админ панель - Perfume Bot</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f5f5;
+            display: flex;
             min-height: 100vh;
         }
-        .header {
-            background: #1a1a2e;
+
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
             color: white;
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
         }
-        .header h1 {
-            font-size: 24px;
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 0 20px;
+            font-size: 20px;
         }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
+
+        .sidebar nav a {
+            display: block;
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 15px 25px;
+            transition: background 0.3s;
+        }
+
+        .sidebar nav a:hover,
+        .sidebar nav a.active {
+            background: #34495e;
+        }
+
+        .content {
+            margin-left: 250px;
             padding: 30px;
+            width: calc(100% - 250px);
         }
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            padding: 12px 24px;
-            border: none;
-            background: white;
-            cursor: pointer;
-            font-size: 16px;
-            border-radius: 8px 8px 0 0;
-            transition: all 0.2s;
-            color: #333;
-        }
-        .tab-btn.active {
-            background: #1a1a2e;
-            color: white;
-        }
-        .tab-content {
+
+        .section {
             display: none;
             background: white;
-            border-radius: 0 8px 8px 8px;
-            padding: 24px;
+            padding: 25px;
+            border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .tab-content.active {
+
+        .section.active {
             display: block;
         }
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+
+        h1 {
             margin-bottom: 20px;
+            color: #2c3e50;
         }
+
         .btn {
             padding: 10px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.2s;
+            transition: opacity 0.3s;
+            margin: 5px;
         }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
         .btn-primary {
-            background: #4f46e5;
+            background: #3498db;
             color: white;
         }
-        .btn-primary:hover {
-            background: #4338ca;
-        }
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-        .btn-danger:hover {
-            background: #dc2626;
-        }
+
         .btn-success {
-            background: #10b981;
+            background: #27ae60;
             color: white;
         }
-        .btn-success:hover {
-            background: #059669;
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
         }
-        .form-group {
-            margin-bottom: 15px;
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
         }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #374151;
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
         }
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
+
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
         }
+
         th, td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #ddd;
         }
+
         th {
-            background: #f9fafb;
+            background: #f8f9fa;
             font-weight: 600;
-            color: #374151;
+            color: #2c3e50;
         }
+
         tr:hover {
-            background: #f9fafb;
+            background: #f8f9fa;
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -142,156 +140,248 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
             z-index: 1000;
         }
+
         .modal.active {
             display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
         .modal-content {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            width: 100%;
-            max-width: 500px;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
             max-height: 90vh;
             overflow-y: auto;
         }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+
+        .modal-content h2 {
             margin-bottom: 20px;
+            color: #2c3e50;
         }
-        .modal-header h2 {
-            font-size: 20px;
+
+        .form-group {
+            margin-bottom: 15px;
         }
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #6b7280;
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #2c3e50;
         }
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
         }
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            color: white;
-            z-index: 2000;
-            transform: translateX(400px);
-            transition: transform 0.3s;
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
         }
-        .toast.show {
-            transform: translateX(0);
-        }
-        .toast-success {
-            background: #10b981;
-        }
-        .toast-error {
-            background: #ef4444;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-        .actions-cell {
-            display: flex;
-            gap: 8px;
-        }
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
+
+        .form-actions {
             margin-top: 20px;
+            text-align: right;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .pagination button {
+            margin: 0 5px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            background: #3498db;
+            color: white;
+            margin: 2px;
+        }
+
+        .product-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <h1>Админ-панель</h1>
-    </header>
+    <div class="sidebar">
+        <h2>Perfume Bot<br>Админ панель</h2>
+        <nav>
+            <a href="#" onclick="showSection('products', this)" class="active">Товары</a>
+            <a href="#" onclick="showSection('brands', this)">Бренды</a>
+            <a href="#" onclick="showSection('categories', this)">Категории</a>
+            <a href="#" onclick="showSection('upload', this)">Загрузка файлов</a>
+        </nav>
+    </div>
 
-    <div class="container">
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="products">Товары</button>
-            <button class="tab-btn" data-tab="brands">Бренды</button>
+    <div class="content">
+        <div id="products" class="section active">
+            <h1>Товары</h1>
+            <button class="btn btn-success" onclick="openProductModal()">Добавить товар</button>
+            <div id="productsAlert" class="alert"></div>
+            <table id="productsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Изображение</th>
+                        <th>Название</th>
+                        <th>Бренд</th>
+                        <th>Цена</th>
+                        <th>Категории</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="productsBody"></tbody>
+            </table>
+            <div class="pagination">
+                <button class="btn btn-secondary" onclick="changePage('products', -1)">Назад</button>
+                <span id="productsPage">1</span>
+                <button class="btn btn-secondary" onclick="changePage('products', 1)">Вперед</button>
+            </div>
         </div>
 
-        <div id="products" class="tab-content active">
-            <div class="section-header">
-                <h2>Товары</h2>
-                <button class="btn btn-primary" onclick="openProductModal()">+ Добавить товар</button>
-            </div>
-            <div id="productsTable">
-                <div class="loading">Загрузка...</div>
+        <div id="brands" class="section">
+            <h1>Бренды</h1>
+            <button class="btn btn-success" onclick="openBrandModal()">Добавить бренд</button>
+            <div id="brandsAlert" class="alert"></div>
+            <table id="brandsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Описание</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="brandsBody"></tbody>
+            </table>
+            <div class="pagination">
+                <button class="btn btn-secondary" onclick="changePage('brands', -1)">Назад</button>
+                <span id="brandsPage">1</span>
+                <button class="btn btn-secondary" onclick="changePage('brands', 1)">Вперед</button>
             </div>
         </div>
 
-        <div id="brands" class="tab-content">
-            <div class="section-header">
-                <h2>Бренды</h2>
-                <button class="btn btn-primary" onclick="openBrandModal()">+ Добавить бренд</button>
+        <div id="categories" class="section">
+            <h1>Категории</h1>
+            <button class="btn btn-success" onclick="openCategoryModal()">Добавить категорию</button>
+            <div id="categoriesAlert" class="alert"></div>
+            <table id="categoriesTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="categoriesBody"></tbody>
+            </table>
+        </div>
+
+        <div id="upload" class="section">
+            <h1>Загрузка файлов</h1>
+            <div id="uploadAlert" class="alert"></div>
+            <div class="form-group">
+                <label>Выберите файлы:</label>
+                <input type="file" id="fileInput" multiple accept="image/*">
             </div>
-            <div id="brandsTable">
-                <div class="loading">Загрузка...</div>
-            </div>
+            <button class="btn btn-primary" onclick="uploadFiles()">Загрузить</button>
+            <div id="uploadedLinks" style="margin-top: 20px;"></div>
         </div>
     </div>
 
     <div id="productModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="productModalTitle">Добавить товар</h2>
-                <button class="close-btn" onclick="closeProductModal()">&times;</button>
-            </div>
+            <h2 id="productModalTitle">Добавить товар</h2>
             <form id="productForm" onsubmit="saveProduct(event)">
                 <input type="hidden" id="productId">
                 <div class="form-group">
-                    <label>Бренд</label>
+                    <label>Название:</label>
+                    <input type="text" id="productTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Бренд:</label>
                     <select id="productBrand" required>
                         <option value="">Выберите бренд</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Категория</label>
-                    <select id="productCategory" required>
-                        <option value="">Загрузка категорий...</option>
-                    </select>
+                    <label>Цена:</label>
+                    <input type="number" id="productPrice" required>
                 </div>
                 <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" id="productTitle" required>
-                </div>
-                <div class="form-group">
-                    <label>Цена (руб.)</label>
-                    <input type="number" id="productPrice" required min="0">
-                </div>
-                <div class="form-group">
-                    <label>Описание</label>
+                    <label>Описание:</label>
                     <textarea id="productDescription"></textarea>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn" onclick="closeProductModal()">Отмена</button>
-                    <button type="submit" class="btn btn-success">Сохранить</button>
+                <div class="form-group">
+                    <label>Изображение товара:</label>
+                    <input type="file" id="productImageFile" accept="image/*" onchange="uploadProductImage()">
+                    <div id="productImagePreview" style="margin-top: 10px;"></div>
+                    <input type="hidden" id="productImageFileId">
+                    <div id="uploadStatus" style="margin-top: 5px; font-size: 12px;"></div>
+                </div>
+                <div class="form-group">
+                    <label>Категории:</label>
+                    <div id="productCategories" class="checkbox-group"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
                 </div>
             </form>
         </div>
@@ -299,216 +389,362 @@
 
     <div id="brandModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="brandModalTitle">Добавить бренд</h2>
-                <button class="close-btn" onclick="closeBrandModal()">&times;</button>
-            </div>
+            <h2 id="brandModalTitle">Добавить бренд</h2>
             <form id="brandForm" onsubmit="saveBrand(event)">
                 <input type="hidden" id="brandId">
                 <div class="form-group">
-                    <label>Название</label>
+                    <label>Название:</label>
                     <input type="text" id="brandTitle" required>
                 </div>
                 <div class="form-group">
-                    <label>Описание</label>
+                    <label>Описание:</label>
                     <textarea id="brandDescription"></textarea>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn" onclick="closeBrandModal()">Отмена</button>
-                    <button type="submit" class="btn btn-success">Сохранить</button>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeBrandModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <div id="categoryModal" class="modal">
+        <div class="modal-content">
+            <h2 id="categoryModalTitle">Добавить категорию</h2>
+            <form id="categoryForm" onsubmit="saveCategory(event)">
+                <input type="hidden" id="categoryId">
+                <div class="form-group">
+                    <label>Название:</label>
+                    <input type="text" id="categoryTitle" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCategoryModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
-        let brands = [];
-        let categories = []; // ДОБАВЛЕНО: Массив для хранения категорий
-        let products = [];
+        const API_BASE = '/api';
+        let productsPage = 1;
+        let brandsPage = 1;
+        const limit = 20;
+        let allCategories = [];
+        let allBrands = [];
 
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.tab).classList.add('active');
-            });
-        });
+        function showSection(sectionId, el) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            if (el) el.classList.add('active');
 
-        async function loadBrands() {
+            if (sectionId === 'products') loadProducts();
+            if (sectionId === 'brands') loadBrands();
+            if (sectionId === 'categories') loadCategories();
+        }
+
+        function showAlert(elementId, message, type) {
+            const alert = document.getElementById(elementId);
+            alert.textContent = message;
+            alert.className = 'alert alert-' + type;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 3000);
+        }
+
+        async function apiRequest(url, method = 'GET', data = null) {
+            const options = {
+                method,
+                headers: {}
+            };
+            if (data) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(data);
+            }
             try {
-                const res = await fetch('/api/brands');
-                const data = await res.json();
-                brands = data.data || [];
-                renderBrands();
-                updateBrandSelect();
-            } catch (e) {
-                showToast('Ошибка загрузки брендов', 'error');
+                const response = await fetch(API_BASE + url, options);
+                return await response.json();
+            } catch (err) {
+                console.error('API Error:', err);
+                return {};
             }
-        }
-
-        // ДОБАВЛЕНО: Загрузка категорий с сервера
-        async function loadCategories() {
-            try {
-                const res = await fetch('/api/categories');
-                const data = await res.json();
-                categories = data.data || [];
-                updateCategorySelect();
-            } catch (e) {
-                showToast('Ошибка загрузки категорий', 'error');
-            }
-        }
-
-        function renderBrands() {
-            const container = document.getElementById('brandsTable');
-            if (brands.length === 0) {
-                container.innerHTML = '<div class="empty-state">Нет брендов. Добавьте первый бренд!</div>';
-                return;
-            }
-            let html = '<table><thead><tr><th>ID</th><th>Название</th><th>Описание</th><th>Действия</th></tr></thead><tbody>';
-            brands.forEach(brand => {
-                html += `<tr>
-                    <td>${brand.ID}</td>
-                    <td>${brand.Title}</td>
-                    <td>${brand.Description || '-'}</td>
-                    <td class="actions-cell">
-                        <button class="btn btn-primary btn-sm" onclick="editBrand(${brand.ID})">Изменить</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteBrand(${brand.ID})">Удалить</button>
-                    </td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-
-        function updateBrandSelect() {
-            const select = document.getElementById('productBrand');
-            select.innerHTML = '<option value="">Выберите бренд</option>';
-            brands.forEach(brand => {
-                select.innerHTML += `<option value="${brand.ID}">${brand.Title}</option>`;
-            });
-        }
-
-        // ДОБАВЛЕНО: Отрисовка options для селектора категорий
-        function updateCategorySelect() {
-            const select = document.getElementById('productCategory');
-            select.innerHTML = '<option value="">Выберите категорию</option>';
-            categories.forEach(category => {
-                select.innerHTML += `<option value="${category.ID}">${category.Title}</option>`;
-            });
         }
 
         async function loadProducts() {
-            try {
-                const res = await fetch('/api/products?limit=1000&offset=0');
-                const data = await res.json();
-                products = data.data || [];
-                renderProducts();
-            } catch (e) {
-                showToast('Ошибка загрузки товаров', 'error');
+            const offset = (productsPage - 1) * limit;
+            const data = await apiRequest(`/products?limit=${limit}&offset=${offset}`);
+            const tbody = document.getElementById('productsBody');
+            tbody.innerHTML = '';
+
+            if (data.data && data.data.length > 0) {
+                data.data.forEach(product => {
+                    const tr = document.createElement('tr');
+                    const img = product.ImageFileID ? `<img src="${product.ImageFileID}" class="product-image">` : 'Нет';
+                    const categoryIds = product.category_ids || [];
+                    const categories = categoryIds.length > 0 ? categoryIds.map(id => {
+                        const cat = allCategories.find(c => c.ID == id);
+                        return cat ? `<span class="badge">${cat.Title}</span>` : '';
+                    }).join('') : 'Нет категорий';
+                    tr.innerHTML = `
+                        <td>${product.ID}</td>
+                        <td>${img}</td>
+                        <td>${product.Title}</td>
+                        <td>${product.Brand ? product.Brand.Title : '-'}</td>
+                        <td>${product.Price} ₽</td>
+                        <td>${categories}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="editProduct(${product.ID})">Изменить</button>
+                            <button class="btn btn-danger" onclick="deleteProduct(${product.ID})">Удалить</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Товары не найдены</td></tr>';
             }
         }
 
-        function renderProducts() {
-            const container = document.getElementById('productsTable');
-            if (products.length === 0) {
-                container.innerHTML = '<div class="empty-state">Нет товаров. Добавьте первый товар!</div>';
-                return;
+        async function loadBrands() {
+            const offset = (brandsPage - 1) * limit;
+            const data = await apiRequest(`/brands?limit=${limit}&offset=${offset}`);
+            const tbody = document.getElementById('brandsBody');
+            tbody.innerHTML = '';
+
+            if (data.data && data.data.length > 0) {
+                allBrands = data.data;
+                data.data.forEach(brand => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${brand.ID}</td>
+                        <td>${brand.Title}</td>
+                        <td>${brand.Description || '-'}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="editBrand(${brand.ID})">Изменить</button>
+                            <button class="btn btn-danger" onclick="deleteBrand(${brand.ID})">Удалить</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Бренды не найдены</td></tr>';
             }
-            let html = '<table><thead><tr><th>ID</th><th>Название</th><th>Бренд</th><th>Цена</th><th>Описание</th><th>Действия</th></tr></thead><tbody>';
-            products.forEach(product => {
-                html += `<tr>
-                    <td>${product.ID}</td>
-                    <td>${product.Title}</td>
-                    <td>${(product.Brand && product.Brand.Title) || '-'}</td>
-                    <td>${product.Price} руб.</td>
-                    <td>${product.Description ? product.Description.substring(0, 50) + (product.Description.length > 50 ? '...' : '') : '-'}</td>
-                    <td class="actions-cell">
-                        <button class="btn btn-primary btn-sm" onclick="editProduct(${product.ID})">Изменить</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.ID})">Удалить</button>
-                    </td>
-                </tr>`;
+        }
+
+        async function loadCategories() {
+            const data = await apiRequest('/categories');
+            const tbody = document.getElementById('categoriesBody');
+            tbody.innerHTML = '';
+            allCategories = data.data || [];
+
+            if (allCategories.length > 0) {
+                allCategories.forEach(category => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${category.ID}</td>
+                        <td>${category.Title}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="editCategory(${category.ID})">Изменить</button>
+                            <button class="btn btn-danger" onclick="deleteCategory(${category.ID})">Удалить</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">Категории не найдены</td></tr>';
+            }
+        }
+
+        async function loadBrandsForSelect() {
+            const data = await apiRequest('/brands?limit=100');
+            const select = document.getElementById('productBrand');
+            select.innerHTML = '<option value="">Выберите бренд</option>';
+            if (data.data) {
+                data.data.forEach(brand => {
+                    select.innerHTML += `<option value="${brand.ID}">${brand.Title}</option>`;
+                });
+            }
+        }
+
+        function loadCategoriesForCheckboxes(selectedIds = []) {
+            const container = document.getElementById('productCategories');
+            let html = '';
+            allCategories.forEach(cat => {
+                const checked = selectedIds.includes(cat.ID) ? 'checked' : '';
+                html += `
+                    <label>
+                        <input type="checkbox" value="${cat.ID}" ${checked}> ${cat.Title}
+                    </label>
+                `;
             });
-            html += '</tbody></table>';
             container.innerHTML = html;
         }
 
-        function openProductModal(product = null) {
-            document.getElementById('productModal').classList.add('active');
-            if (product) {
-                document.getElementById('productModalTitle').textContent = 'Изменить товар';
-                document.getElementById('productId').value = product.ID;
-                document.getElementById('productBrand').value = product.Brand?.ID || '';
-                // При редактировании сбрасываем категорию (т.к. наш API пока не отдает категорию в списке товаров)
-                document.getElementById('productCategory').value = ''; 
-                document.getElementById('productTitle').value = product.Title;
-                document.getElementById('productPrice').value = product.Price;
-                document.getElementById('productDescription').value = product.Description || '';
-            } else {
-                document.getElementById('productModalTitle').textContent = 'Добавить товар';
-                document.getElementById('productForm').reset();
-                document.getElementById('productId').value = '';
-                document.getElementById('productBrand').value = '';
-                document.getElementById('productCategory').value = '';
+        async function uploadProductImage() {
+            const fileInput = document.getElementById('productImageFile');
+            const statusDiv = document.getElementById('uploadStatus');
+            const previewDiv = document.getElementById('productImagePreview');
+
+            if (!fileInput.files.length) {
+                return null;
             }
+
+            const file = fileInput.files[0];
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewDiv.innerHTML = `<img src="${e.target.result}" style="max-width: 200px; max-height: 200px;">`;
+            };
+            reader.readAsDataURL(file);
+
+            statusDiv.textContent = 'Загрузка...';
+            statusDiv.style.color = '#f39c12';
+
+            const formData = new FormData();
+            formData.append('files', file);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.links && data.links.length > 0) {
+                    document.getElementById('productImageFileId').value = data.links[0];
+                    statusDiv.textContent = 'Изображение загружено!';
+                    statusDiv.style.color = '#27ae60';
+                    return data.links[0];
+                } else {
+                    statusDiv.textContent = 'Ошибка: ' + (data.error || 'Unknown error');
+                    statusDiv.style.color = '#e74c3c';
+                    return null;
+                }
+            } catch (err) {
+                statusDiv.textContent = 'Ошибка загрузки: ' + err.message;
+                statusDiv.style.color = '#e74c3c';
+                return null;
+            }
+        }
+
+        function changePage(type, delta) {
+            if (type === 'products') {
+                productsPage = Math.max(1, productsPage + delta);
+                document.getElementById('productsPage').textContent = productsPage;
+                loadProducts();
+            } else if (type === 'brands') {
+                brandsPage = Math.max(1, brandsPage + delta);
+                document.getElementById('brandsPage').textContent = brandsPage;
+                loadBrands();
+            }
+        }
+
+        function openProductModal() {
+            document.getElementById('productModalTitle').textContent = 'Добавить товар';
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('productImageFileId').value = '';
+            document.getElementById('productImageFile').value = '';
+            document.getElementById('productImagePreview').innerHTML = '';
+            document.getElementById('uploadStatus').textContent = '';
+            loadBrandsForSelect();
+            loadCategoriesForCheckboxes();
+            document.getElementById('productModal').classList.add('active');
         }
 
         function closeProductModal() {
             document.getElementById('productModal').classList.remove('active');
         }
 
-        function openBrandModal(brand = null) {
-            document.getElementById('brandModal').classList.add('active');
-            if (brand) {
-                document.getElementById('brandModalTitle').textContent = 'Изменить бренд';
-                document.getElementById('brandId').value = brand.ID;
-                document.getElementById('brandTitle').value = brand.Title;
-                document.getElementById('brandDescription').value = brand.Description || '';
+        async function editProduct(id) {
+            const product = await apiRequest(`/products/${id}`);
+            document.getElementById('productModalTitle').textContent = 'Изменить товар';
+            document.getElementById('productId').value = product.ID;
+            document.getElementById('productTitle').value = product.Title;
+            document.getElementById('productPrice').value = product.Price;
+            document.getElementById('productDescription').value = product.Description || '';
+            document.getElementById('productImageFileId').value = product.ImageFileID || '';
+            document.getElementById('productImageFile').value = '';
+
+            // Show image preview if exists
+            const previewDiv = document.getElementById('productImagePreview');
+            if (product.ImageFileID) {
+                previewDiv.innerHTML = `<img src="${product.ImageFileID}" style="max-width: 200px; max-height: 200px;">`;
             } else {
-                document.getElementById('brandModalTitle').textContent = 'Добавить бренд';
-                document.getElementById('brandForm').reset();
-                document.getElementById('brandId').value = '';
+                previewDiv.innerHTML = '';
             }
+            document.getElementById('uploadStatus').textContent = '';
+
+            await loadBrandsForSelect();
+            document.getElementById('productBrand').value = product.Brand ? product.Brand.ID : '';
+
+            loadCategoriesForCheckboxes(product.category_ids || []);
+
+            document.getElementById('productModal').classList.add('active');
+        }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('productId').value;
+            const categoryCheckboxes = document.querySelectorAll('#productCategories input:checked');
+            const categoryIds = Array.from(categoryCheckboxes).map(cb => parseInt(cb.value));
+
+            // If there's a file selected but not uploaded yet, upload it
+            const fileInput = document.getElementById('productImageFile');
+            let imageFileId = document.getElementById('productImageFileId').value;
+
+            if (fileInput.files.length > 0 && !imageFileId) {
+                await uploadProductImage();
+                imageFileId = document.getElementById('productImageFileId').value;
+            }
+
+            const data = {
+                title: document.getElementById('productTitle').value,
+                brand_id: parseInt(document.getElementById('productBrand').value),
+                price: parseInt(document.getElementById('productPrice').value),
+                description: document.getElementById('productDescription').value,
+                image_file_id: imageFileId,
+                category_ids: categoryIds
+            };
+
+            if (id) {
+                await apiRequest(`/products/${id}`, 'PUT', data);
+                showAlert('productsAlert', 'Товар успешно обновлен', 'success');
+            } else {
+                await apiRequest('/products', 'POST', data);
+                showAlert('productsAlert', 'Товар успешно добавлен', 'success');
+            }
+
+            closeProductModal();
+            loadProducts();
+        }
+
+        async function deleteProduct(id) {
+            if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+                await apiRequest(`/products/${id}`, 'DELETE');
+                showAlert('productsAlert', 'Товар удален', 'success');
+                loadProducts();
+            }
+        }
+
+        function openBrandModal() {
+            document.getElementById('brandModalTitle').textContent = 'Добавить бренд';
+            document.getElementById('brandForm').reset();
+            document.getElementById('brandId').value = '';
+            document.getElementById('brandModal').classList.add('active');
         }
 
         function closeBrandModal() {
             document.getElementById('brandModal').classList.remove('active');
         }
 
-        async function saveProduct(e) {
-            e.preventDefault();
-            const id = document.getElementById('productId').value;
-            
-            // ИЗМЕНЕНО: Добавлен category_id в объект data
-            const data = {
-                brand_id: parseInt(document.getElementById('productBrand').value),
-                category_id: parseInt(document.getElementById('productCategory').value),
-                title: document.getElementById('productTitle').value,
-                price: parseInt(document.getElementById('productPrice').value),
-                description: document.getElementById('productDescription').value
-            };
-
-            try {
-                let url = '/api/products';
-                let method = 'POST';
-                if (id) {
-                    url = `/api/products/${id}`;
-                    method = 'PUT';
-                }
-                const res = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                if (!res.ok) throw new Error('Error');
-                showToast(id ? 'Товар обновлен' : 'Товар добавлен', 'success');
-                closeProductModal();
-                loadProducts();
-            } catch (e) {
-                showToast('Ошибка сохранения', 'error');
-            }
+        async function editBrand(id) {
+            const brand = await apiRequest(`/brands/${id}`);
+            document.getElementById('brandModalTitle').textContent = 'Изменить бренд';
+            document.getElementById('brandId').value = brand.ID;
+            document.getElementById('brandTitle').value = brand.Title;
+            document.getElementById('brandDescription').value = brand.Description || '';
+            document.getElementById('brandModal').classList.add('active');
         }
 
         async function saveBrand(e) {
@@ -519,72 +755,108 @@
                 description: document.getElementById('brandDescription').value
             };
 
-            try {
-                let url = '/api/brands';
-                let method = 'POST';
-                if (id) {
-                    url = `/api/brands/${id}`;
-                    method = 'PUT';
-                }
-                const res = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                if (!res.ok) throw new Error('Error');
-                showToast(id ? 'Бренд обновлен' : 'Бренд добавлен', 'success');
-                closeBrandModal();
-                loadBrands();
-            } catch (e) {
-                showToast('Ошибка сохранения', 'error');
+            if (id) {
+                await apiRequest(`/brands/${id}`, 'PUT', data);
+                showAlert('brandsAlert', 'Бренд успешно обновлен', 'success');
+            } else {
+                await apiRequest('/brands', 'POST', data);
+                showAlert('brandsAlert', 'Бренд успешно добавлен', 'success');
             }
-        }
 
-        function editProduct(id) {
-            const product = products.find(p => p.ID === id);
-            if (product) openProductModal(product);
-        }
-
-        function editBrand(id) {
-            const brand = brands.find(b => b.ID === id);
-            if (brand) openBrandModal(brand);
-        }
-
-        async function deleteProduct(id) {
-            if (!confirm('Удалить этот товар?')) return;
-            try {
-                await fetch(`/api/products/${id}`, { method: 'DELETE' });
-                showToast('Товар удален', 'success');
-                loadProducts();
-            } catch (e) {
-                console.error(e);
-                showToast('Ошибка удаления', 'error');
-            }
+            closeBrandModal();
+            loadBrands();
         }
 
         async function deleteBrand(id) {
-            if (!confirm('Удалить этот бренд?')) return;
-            try {
-                await fetch(`/api/brands/${id}`, { method: 'DELETE' });
-                showToast('Бренд удален', 'success');
+            if (confirm('Вы уверены, что хотите удалить этот бренд?')) {
+                await apiRequest(`/brands/${id}`, 'DELETE');
+                showAlert('brandsAlert', 'Бренд удален', 'success');
                 loadBrands();
-            } catch (e) {
-                console.error(e);
-                showToast('Ошибка удаления', 'error');
             }
         }
 
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast toast-${type} show`;
-            setTimeout(() => toast.classList.remove('show'), 3000);
+        function openCategoryModal() {
+            document.getElementById('categoryModalTitle').textContent = 'Добавить категорию';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categoryModal').classList.add('active');
         }
 
-        // Вызываем загрузку данных при открытии страницы
-        loadBrands();
-        loadCategories(); // ДОБАВЛЕНО
-        loadProducts();
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').classList.remove('active');
+        }
+
+        async function editCategory(id) {
+            const category = await apiRequest(`/categories/${id}`);
+            document.getElementById('categoryModalTitle').textContent = 'Изменить категорию';
+            document.getElementById('categoryId').value = category.ID;
+            document.getElementById('categoryTitle').value = category.Title;
+            document.getElementById('categoryModal').classList.add('active');
+        }
+
+        async function saveCategory(e) {
+            e.preventDefault();
+            const id = document.getElementById('categoryId').value;
+            const data = {
+                title: document.getElementById('categoryTitle').value
+            };
+
+            if (id) {
+                await apiRequest(`/categories/${id}`, 'PUT', data);
+                showAlert('categoriesAlert', 'Категория успешно обновлена', 'success');
+            } else {
+                await apiRequest('/categories', 'POST', data);
+                showAlert('categoriesAlert', 'Категория успешно добавлена', 'success');
+            }
+
+            closeCategoryModal();
+            loadCategories();
+        }
+
+        async function deleteCategory(id) {
+            if (confirm('Вы уверены, что хотите удалить эту категорию?')) {
+                await apiRequest(`/categories/${id}`, 'DELETE');
+                showAlert('categoriesAlert', 'Категория удалена', 'success');
+                loadCategories();
+            }
+        }
+
+        async function uploadFiles() {
+            const input = document.getElementById('fileInput');
+            if (!input.files.length) {
+                showAlert('uploadAlert', 'Выберите файлы', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            for (let file of input.files) {
+                formData.append('files', file);
+            }
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.links) {
+                showAlert('uploadAlert', 'Файлы успешно загружены', 'success');
+                const container = document.getElementById('uploadedLinks');
+                container.innerHTML = '<h3>Загруженные файлы:</h3>';
+                data.links.forEach(link => {
+                    container.innerHTML += `<p>${link}</p>`;
+                });
+            } else {
+                showAlert('uploadAlert', 'Ошибка загрузки: ' + (data.error || 'Unknown error'), 'error');
+            }
+        }
+
+        async function init() {
+            await loadCategories();
+            await loadProducts();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>

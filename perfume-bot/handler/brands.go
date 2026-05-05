@@ -72,7 +72,7 @@ func (h *Handler) BrandsCallbackHandler(ctx context.Context, b *bot.Bot, update 
 		var navRow []models.InlineKeyboardButton
 		if page > 0 {
 			navRow = append(navRow, models.InlineKeyboardButton{
-				Text:         "« ⬅️ Назад »",
+				Text:         "⬅️ Назад",
 				CallbackData: fmt.Sprintf("brands:%d", page-1),
 			})
 		}
@@ -84,7 +84,7 @@ func (h *Handler) BrandsCallbackHandler(ctx context.Context, b *bot.Bot, update 
 
 		if page < totalPages-1 {
 			navRow = append(navRow, models.InlineKeyboardButton{
-				Text:         "« Далее ➡️ »",
+				Text:         "Далее ➡️",
 				CallbackData: fmt.Sprintf("brands:%d", page+1),
 			})
 		}
@@ -92,7 +92,7 @@ func (h *Handler) BrandsCallbackHandler(ctx context.Context, b *bot.Bot, update 
 		kb.InlineKeyboard = append(kb.InlineKeyboard, navRow)
 		kb.InlineKeyboard = append(kb.InlineKeyboard, []models.InlineKeyboardButton{
 			{
-				Text:         "« 🏠 Главное меню »",
+				Text:         "🏠 Главное меню",
 				CallbackData: "main_menu",
 			},
 		})
@@ -154,7 +154,7 @@ func (h *Handler) BrandProductsCallbackHandler(ctx context.Context, b *bot.Bot, 
 		for _, p := range products {
 			kb.InlineKeyboard = append(kb.InlineKeyboard, []models.InlineKeyboardButton{
 				{
-					Text:         fmt.Sprintf("🔸 %s %s - %d руб.", p.Title, p.Brand.Title, p.Price),
+					Text:         fmt.Sprintf("%s %s - %d руб.", p.Title, p.Brand.Title, p.Price),
 					CallbackData: fmt.Sprintf("p:%d|bp:%d:%d", p.ID, brandID, page),
 				},
 			})
@@ -165,7 +165,7 @@ func (h *Handler) BrandProductsCallbackHandler(ctx context.Context, b *bot.Bot, 
 		var navRow []models.InlineKeyboardButton
 		if page > 0 {
 			navRow = append(navRow, models.InlineKeyboardButton{
-				Text:         "« ⬅️ Назад »",
+				Text:         "⬅️ Назад",
 				CallbackData: fmt.Sprintf("bp:%d:%d", brandID, page-1),
 			})
 		}
@@ -177,7 +177,7 @@ func (h *Handler) BrandProductsCallbackHandler(ctx context.Context, b *bot.Bot, 
 
 		if page < totalPages-1 {
 			navRow = append(navRow, models.InlineKeyboardButton{
-				Text:         "« Далее ➡️ »",
+				Text:         "Далее ➡️",
 				CallbackData: fmt.Sprintf("bp:%d:%d", brandID, page+1),
 			})
 		}
@@ -185,7 +185,7 @@ func (h *Handler) BrandProductsCallbackHandler(ctx context.Context, b *bot.Bot, 
 		kb.InlineKeyboard = append(kb.InlineKeyboard, navRow)
 		kb.InlineKeyboard = append(kb.InlineKeyboard, []models.InlineKeyboardButton{
 			{
-				Text:         "« 🔙 К списку брендов »",
+				Text:         "🔙 К списку брендов",
 				CallbackData: "brands:0",
 			},
 		})

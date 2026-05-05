@@ -46,7 +46,7 @@ func (h *Handler) CategoriesCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		}
 		kb.InlineKeyboard = append(kb.InlineKeyboard, []models.InlineKeyboardButton{
 			{
-				Text:         "« 🏠 Главное меню »",
+				Text:         "🏠 Главное меню",
 				CallbackData: "main_menu",
 			},
 		})
@@ -105,7 +105,7 @@ func (h *Handler) CategoryProductsCallbackHandler(ctx context.Context, b *bot.Bo
 			kb.InlineKeyboard = append(kb.InlineKeyboard,
 				[]models.InlineKeyboardButton{
 					{
-						Text:         fmt.Sprintf("🔸 %s %s - %d руб.", p.Brand.Title, p.Title, p.Price),
+						Text:         fmt.Sprintf("%s %s - %d руб.", p.Brand.Title, p.Title, p.Price),
 						CallbackData: fmt.Sprintf("p:%d|cp:%d:%d", p.ID, catID, page),
 					},
 				})
@@ -115,7 +115,7 @@ func (h *Handler) CategoryProductsCallbackHandler(ctx context.Context, b *bot.Bo
 		var navRow []models.InlineKeyboardButton
 		if page > 0 {
 			navRow = append(navRow, models.InlineKeyboardButton{
-				Text:         "« ⬅️ Назад »",
+				Text:         "⬅️ Назад",
 				CallbackData: fmt.Sprintf("cp:%d:%d", catID, page-1),
 			})
 		}
@@ -126,7 +126,7 @@ func (h *Handler) CategoryProductsCallbackHandler(ctx context.Context, b *bot.Bo
 
 		if page < totalPages-1 {
 			navRow = append(navRow, models.InlineKeyboardButton{
-				Text:         "« Далее ➡️ »",
+				Text:         "Далее ➡️",
 				CallbackData: fmt.Sprintf("cp:%d:%d", catID, page+1),
 			})
 		}

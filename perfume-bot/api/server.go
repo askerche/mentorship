@@ -2,24 +2,28 @@ package api
 
 import (
 	"net/http"
+	"perfume-bot/clients/minio"
 	"perfume-bot/repository"
 
 	"github.com/gin-gonic/gin"
 )
 
 type ApiServer struct {
-	repo *repository.Repository
+	repo       *repository.Repository
+	fileClient *minio.Client
 }
 
-func New(repo *repository.Repository) *ApiServer {
+func New(repo *repository.Repository, fileClient *minio.Client) *ApiServer {
 	return &ApiServer{
-		repo: repo,
+		repo:       repo,
+		fileClient: fileClient,
 	}
 }
 
 func (s *ApiServer) Run() error {
 	router := gin.Default()
 	router.GET("/api/health", s.HealthCheckHandler)
+
 	router.POST("/api/products", s.CreateProductHandler)
 	router.GET("/api/products", s.GetProductsHandler)
 	router.GET("/api/products/:id", s.GetProductHandler)
@@ -33,6 +37,11 @@ func (s *ApiServer) Run() error {
 	router.DELETE("/api/brands/:id", s.DeleteBrandHandler)
 
 	router.GET("/api/categories", s.GetCategoriesHandler)
+	router.POST("/api/categories", s.CreateCategoryHandler)
+	router.PUT("/api/categories/:id", s.UpdateCategoryHandler)
+	router.DELETE("/api/categories/:id", s.DeleteCategoryHandler)
+
+	router.POST("/upload", s.UploadHandler)
 
 	router.StaticFile("/admin", "./static/admin.html")
 

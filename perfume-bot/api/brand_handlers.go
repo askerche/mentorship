@@ -25,7 +25,7 @@ func (s *ApiServer) GetBrandsHandler(c *gin.Context) {
 		limit = 0
 	}
 
-	brands, err := s.repo.GetBrandsPage(c.Request.Context(), limit, offset)
+	brands, err := s.repo.GetBrandsPage(c, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Ошибка при получении списка брендов",
@@ -49,7 +49,7 @@ func (s *ApiServer) CreateBrandHandler(c *gin.Context) {
 		return
 	}
 
-	id, err := s.repo.CreateBrand(c.Request.Context(), req.Title, req.Description)
+	id, err := s.repo.CreateBrand(c, req.Title, req.Description)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Ошибка при сохранении бренда",
@@ -76,7 +76,7 @@ func (s *ApiServer) UpdateBrandHandler(c *gin.Context) {
 		return
 	}
 
-	err = s.repo.UpdateBrand(c.Request.Context(), brandID, brand.Title, brand.Description)
+	err = s.repo.UpdateBrand(c, brandID, brand.Title, brand.Description)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update brand"})
 		return
@@ -94,7 +94,7 @@ func (s *ApiServer) DeleteBrandHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
-	err = s.repo.DeleteBrand(c.Request.Context(), brandID)
+	err = s.repo.DeleteBrand(c, brandID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete brand"})
 		return
@@ -109,7 +109,7 @@ func (s *ApiServer) GetBrandHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
-	brand, err := s.repo.GetBrand(c.Request.Context(), brandID)
+	brand, err := s.repo.GetBrand(c, brandID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "brand not found"})

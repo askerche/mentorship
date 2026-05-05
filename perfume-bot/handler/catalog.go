@@ -69,7 +69,7 @@ func (h *Handler) CatalogCallbackHandler(ctx context.Context, b *bot.Bot, update
 		var navRow []models.InlineKeyboardButton
 		if page > 0 {
 			navRow = append(navRow, models.InlineKeyboardButton{
-				Text:         "« ⬅️ Назад »",
+				Text:         "⬅️ Назад",
 				CallbackData: fmt.Sprintf("catalog:%d", page-1),
 			})
 		}
@@ -81,7 +81,7 @@ func (h *Handler) CatalogCallbackHandler(ctx context.Context, b *bot.Bot, update
 
 		if page < totalPages-1 {
 			navRow = append(navRow, models.InlineKeyboardButton{
-				Text:         "« Далее ➡️ »",
+				Text:         "Далее ➡️",
 				CallbackData: fmt.Sprintf("catalog:%d", page+1),
 			})
 		}
@@ -89,7 +89,7 @@ func (h *Handler) CatalogCallbackHandler(ctx context.Context, b *bot.Bot, update
 		kb.InlineKeyboard = append(kb.InlineKeyboard, navRow)
 		kb.InlineKeyboard = append(kb.InlineKeyboard, []models.InlineKeyboardButton{
 			{
-				Text:         "« 🏠 Главное меню »",
+				Text:         "🏠 Главное меню",
 				CallbackData: "main_menu",
 			},
 		})

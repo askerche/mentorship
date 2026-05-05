@@ -21,10 +21,18 @@ func (s *ApiServer) CreateProductHandler(c *gin.Context) {
 		return
 	}
 
-	id, err := s.repo.CreateProduct(c.Request.Context(), req.BrandID, req.Title, req.Price, req.Description, req.Category)
+	id, err := s.repo.CreateProduct(c, req.BrandID, req.Title, req.Price, req.Description, req.ImageFileID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Ошибка при сохраненния товара в БД",
+		})
+		return
+	}
+
+	err = s.repo.UpdateProductCategories(c, id, req.CategoryIDs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Ошибка при сохраненния категорий товара в БД",
 		})
 		return
 	}
@@ -45,10 +53,10 @@ func (s *ApiServer) GetProductsHandler(c *gin.Context) {
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil || offset < 0 {
-		limit = 0
+		offset = 0
 	}
 
-	products, err := s.repo.GetAllProductsPage(c.Request.Context(), limit, offset)
+	products, err := s.repo.GetAllProductsPage(c, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Ошибка при получении списка товаров из базы данных",
@@ -69,7 +77,7 @@ func (s *ApiServer) GetProductHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
-	product, err := s.repo.GetProductByID(c.Request.Context(), productID)
+	product, err := s.repo.GetProductByID(c, productID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "failed to find product"})
@@ -97,9 +105,17 @@ func (s *ApiServer) UpdateProductHandler(c *gin.Context) {
 		return
 	}
 
-	err = s.repo.UpdateProduct(c.Request.Context(), productID, product.BrandID, product.Title, product.Price, product.Description)
+	err = s.repo.UpdateProduct(c, productID, product.BrandID, product.Title, product.Price, product.Description, product.ImageFileID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
+		return
+	}
+
+	err = s.repo.UpdateProductCategories(c, productID, product.CategoryIDs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Ошибка при сохраненния категорий товара в БД",
+		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -115,7 +131,7 @@ func (s *ApiServer) DeleteProductHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
-	err = s.repo.DeleteProduct(c.Request.Context(), productID)
+	err = s.repo.DeleteProduct(c, productID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete product"})
 		return

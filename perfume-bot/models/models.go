@@ -39,10 +39,15 @@ type CreateProductRequest struct {
 	Title       string `json:"title"`
 	Price       int    `json:"price"`
 	Description string `json:"description"`
-	Category    string `json:"category"`
+	CategoryIDs []int  `json:"category_ids"`
+	ImageFileID string `json:"image_file_id"`
 }
 
 type CreateBrandRequest struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
+}
+
+type CreateCategoryRequest struct {
+	Title string `json:"title"`
 }
