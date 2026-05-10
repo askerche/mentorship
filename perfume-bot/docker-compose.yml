@@ -30,17 +30,21 @@ services:
       MINIO_ROOT_PASSWORD: "password123"
     volumes:
       - minio_data:/data
-    command: server /data --console-address ":9001"    
+    command: server /data --console-address ":9001" 
 
-  adminer:
-    image: adminer
-    container_name: perfume_bot_adminer
+  bot:
+    build: .
+    container_name: perfume_bot_app
     restart: unless-stopped
-    ports:
+    ports: 
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
+      minio:
+        condition: service_started
+    env_file:
+      - .env
 
 volumes:
   pgdata:

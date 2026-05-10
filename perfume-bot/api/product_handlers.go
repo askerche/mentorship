@@ -63,10 +63,22 @@ func (s *ApiServer) GetProductsHandler(c *gin.Context) {
 		})
 		return
 	}
+	totalCount, err := s.repo.GetAllProductsCounts(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Ошибка при получении общего количества товаров",
+		})
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"Status": "Succes",
-		"count":  len(products),
+		"status": "success",
 		"data":   products,
+		"meta": gin.H{
+			"limit":       limit,
+			"offset":      offset,
+			"count":       len(products),
+			"total_count": totalCount,
+		},
 	})
 }
 
@@ -105,7 +117,15 @@ func (s *ApiServer) UpdateProductHandler(c *gin.Context) {
 		return
 	}
 
-	err = s.repo.UpdateProduct(c, productID, product.BrandID, product.Title, product.Price, product.Description, product.ImageFileID)
+	err = s.repo.UpdateProduct(
+		c,
+		productID,
+		product.BrandID,
+		product.Title,
+		product.Price,
+		product.Description,
+		product.ImageFileID,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
 		return

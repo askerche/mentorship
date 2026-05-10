@@ -265,6 +265,7 @@
             <a href="#" onclick="showSection('products', this)" class="active">Товары</a>
             <a href="#" onclick="showSection('brands', this)">Бренды</a>
             <a href="#" onclick="showSection('categories', this)">Категории</a>
+            <a href="#" onclick="showSection('orders', this)">Заказы</a>
             <a href="#" onclick="showSection('upload', this)">Загрузка файлов</a>
         </nav>
     </div>
@@ -342,6 +343,25 @@
             </div>
             <button class="btn btn-primary" onclick="uploadFiles()">Загрузить</button>
             <div id="uploadedLinks" style="margin-top: 20px;"></div>
+        </div>
+
+        <div id="orders" class="section">
+            <h1>Заказы</h1>
+            <div id="ordersAlert" class="alert"></div>
+            <table id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>Номер заказа</th>
+                        <th>Telegram ID</th>
+                        <th>Username</th>
+                        <th>Общая сумма</th>
+                        <th>Статус</th>
+                        <th>Дата оформления</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersBody"></tbody>
+            </table>
         </div>
     </div>
 
@@ -425,6 +445,27 @@
         </div>
     </div>
 
+    <div id="orderModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h2>Детали заказа #<span id="orderModalId"></span></h2>
+            <div id="orderDetails" style="margin: 20px 0;"></div>
+            <div class="form-group">
+                <label>Статус заказа:</label>
+                <select id="orderStatus">
+                    <option value="новый">Новый</option>
+                    <option value="в обработке">В обработке</option>
+                    <option value="отправлен">Отправлен</option>
+                    <option value="доставлен">Доставлен</option>
+                    <option value="отменен">Отменен</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeOrderModal()">Закрыть</button>
+                <button type="button" class="btn btn-primary" onclick="saveOrderStatus()">Сохранить статус</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = '/api';
         let productsPage = 1;
@@ -432,6 +473,7 @@
         const limit = 20;
         let allCategories = [];
         let allBrands = [];
+        let allOrders = [];
 
         function showSection(sectionId, el) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -442,6 +484,7 @@
             if (sectionId === 'products') loadProducts();
             if (sectionId === 'brands') loadBrands();
             if (sectionId === 'categories') loadCategories();
+            if (sectionId === 'orders') loadOrders();
         }
 
         function showAlert(elementId, message, type) {
@@ -473,11 +516,15 @@
         async function loadProducts() {
             const offset = (productsPage - 1) * limit;
             const data = await apiRequest(`/products?limit=${limit}&offset=${offset}`);
+
             const tbody = document.getElementById('productsBody');
             tbody.innerHTML = '';
 
-            if (data.data && data.data.length > 0) {
-                data.data.forEach(product => {
+            const products = data.data || [];
+            const meta = data.meta || {};
+
+            if (products.length > 0) {
+                products.forEach(product => {
                     const tr = document.createElement('tr');
                     const img = product.ImageFileID ? `<img src="${product.ImageFileID}" class="product-image">` : 'Нет';
                     const categoryIds = product.category_ids || [];
@@ -510,9 +557,11 @@
             const tbody = document.getElementById('brandsBody');
             tbody.innerHTML = '';
 
-            if (data.data && data.data.length > 0) {
-                allBrands = data.data;
-                data.data.forEach(brand => {
+            const brands = data.data || [];
+
+            if (brands.length > 0) {
+                allBrands = brands;
+                brands.forEach(brand => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${brand.ID}</td>
@@ -787,7 +836,11 @@
         }
 
         async function editCategory(id) {
-            const category = await apiRequest(`/categories/${id}`);
+            const category = allCategories.find(c => c.ID == id);
+            if (!category) {
+                showAlert('categoriesAlert', 'Категория не найдена', 'error');
+                return;
+            }
             document.getElementById('categoryModalTitle').textContent = 'Изменить категорию';
             document.getElementById('categoryId').value = category.ID;
             document.getElementById('categoryTitle').value = category.Title;
@@ -818,6 +871,118 @@
                 await apiRequest(`/categories/${id}`, 'DELETE');
                 showAlert('categoriesAlert', 'Категория удалена', 'success');
                 loadCategories();
+            }
+        }
+
+        async function loadOrders() {
+            const data = await apiRequest('/orders');
+            const tbody = document.getElementById('ordersBody');
+            tbody.innerHTML = '';
+
+            allOrders = data.data || [];
+            const orders = allOrders;
+
+            if (orders.length > 0) {
+                orders.forEach(order => {
+                    const tr = document.createElement('tr');
+                    const totalAmount = order['total_price'] !== undefined ? order['total_price'] : 0;
+                    const orderDate = order.created_at ? new Date(order.created_at).toLocaleString('ru-RU') : '';
+                    tr.innerHTML = `
+                        <td>${order.ID || order.id || ''}</td>
+                        <td>${order.telegram_id || order.user_telegram_id || ''}</td>
+                        <td>${order.username || 'Н/Д'}</td>
+                        <td>${totalAmount} ₽</td>
+                        <td>${order.status || 'новый'}</td>
+                        <td>${orderDate}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="viewOrder(${order.ID || order.id})">Посмотреть</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">Заказы не найдены</td></tr>';
+            }
+        }
+
+        function viewOrder(id) {
+            const orderFromList = allOrders.find(o => (o.ID || o.id) == id);
+            apiRequest(`/orders/${id}`).then(data => {
+                if (data.error) {
+                    showAlert('ordersAlert', data.error, 'error');
+                    return;
+                }
+                const orderItems = data.order || [];
+                document.getElementById('orderModalId').textContent = id;
+
+                // Use data from list (user info) and from detail (items)
+                const order = orderFromList || {};
+
+                // Build order details
+                const orderDate = order.created_at ? new Date(order.created_at).toLocaleString('ru-RU') : '';
+                let html = `
+                    <table style="width: 100%; margin-bottom: 20px;">
+                        <tr><td><strong>Telegram ID:</strong></td><td>${order.telegram_id || order.TelegramID || ''}</td></tr>
+                        <tr><td><strong>Username:</strong></td><td>${order.username || order.Username || 'Н/Д'}</td></tr>
+                        <tr><td><strong>Общая сумма:</strong></td><td>${order.total_price || order.TotalPrice || 0} ₽</td></tr>
+                        <tr><td><strong>Статус:</strong></td><td>${order.status || order.Status || 'новый'}</td></tr>
+                        <tr><td><strong>Дата:</strong></td><td>${orderDate}</td></tr>
+                    </table>
+                    <h4 style="margin-bottom: 10px;">Товары в заказе:</h4>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 10px; border: 1px solid #ddd;">Название</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Бренд</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Цена</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Кол-во</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                orderItems.forEach(p => {
+                    const price = p.PriceAtPurchase || p.price_at_purchase || p.price || 0;
+                    const quantity = p.Quantity || p.quantity || 1;
+                    const itemSum = price * quantity;
+                    html += `
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${p.Title || p.title || ''}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${p.BrandName || p.brand_name || '-'}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${price} ₽</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${quantity}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${itemSum} ₽</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('orderDetails').innerHTML = html;
+                document.getElementById('orderStatus').value = order.status || order.Status || 'новый';
+                document.getElementById('orderModal').classList.add('active');
+            });
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.remove('active');
+        }
+
+        async function saveOrderStatus() {
+            const orderId = document.getElementById('orderModalId').textContent;
+            const newStatus = document.getElementById('orderStatus').value;
+
+            const data = await apiRequest(`/orders/${orderId}/status`, 'PATCH', {status: newStatus});
+            if (data.error) {
+                showAlert('ordersAlert', data.error, 'error');
+            } else {
+                showAlert('ordersAlert', 'Статус заказа обновлен', 'success');
+                closeOrderModal();
+                loadOrders();
             }
         }
 

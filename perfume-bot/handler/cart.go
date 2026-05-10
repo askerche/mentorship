@@ -18,6 +18,7 @@ func (h *Handler) CartCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		})
 
 		telegramID := update.CallbackQuery.From.ID
+		msg := update.CallbackQuery.Message.Message
 		items, err := h.repo.GetCartByTelegramID(ctx, telegramID)
 		if err != nil {
 			log.Printf("[CartCallbackHandler] failed to get cart for user %d: %v", telegramID, err)
@@ -38,14 +39,23 @@ func (h *Handler) CartCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 				},
 			}
 			msgText := "<b>Ваша корзина пуста</b> \n\nПерейдите в каталог или категории, чтобы выбрать свой идеальный аромат."
-			if update.CallbackQuery.Message.Message != nil {
-				b.EditMessageText(ctx, &bot.EditMessageTextParams{
-					ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-					MessageID:   update.CallbackQuery.Message.Message.ID,
-					Text:        msgText,
-					ParseMode:   models.ParseModeHTML,
-					ReplyMarkup: kb,
-				})
+			if msg != nil {
+				if len(msg.Photo) > 0 {
+					b.SendMessage(ctx, &bot.SendMessageParams{
+						ChatID:      msg.Chat.ID,
+						Text:        msgText,
+						ParseMode:   models.ParseModeHTML,
+						ReplyMarkup: kb,
+					})
+				} else {
+					b.EditMessageText(ctx, &bot.EditMessageTextParams{
+						ChatID:      msg.Chat.ID,
+						MessageID:   msg.ID,
+						Text:        msgText,
+						ParseMode:   models.ParseModeHTML,
+						ReplyMarkup: kb,
+					})
+				}
 			}
 			return
 		}
@@ -73,14 +83,23 @@ func (h *Handler) CartCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 				{Text: "🏠 Главное меню", CallbackData: "main_menu"},
 			},
 		}
-		if update.CallbackQuery.Message.Message != nil {
-			b.EditMessageText(ctx, &bot.EditMessageTextParams{
-				ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-				MessageID:   update.CallbackQuery.Message.Message.ID,
-				Text:        receipt.String(),
-				ParseMode:   models.ParseModeHTML,
-				ReplyMarkup: kb,
-			})
+		if msg != nil {
+			if len(msg.Photo) > 0 {
+				b.SendMessage(ctx, &bot.SendMessageParams{
+					ChatID:      msg.Chat.ID,
+					Text:        receipt.String(),
+					ParseMode:   models.ParseModeHTML,
+					ReplyMarkup: kb,
+				})
+			} else {
+				b.EditMessageText(ctx, &bot.EditMessageTextParams{
+					ChatID:      msg.Chat.ID,
+					MessageID:   msg.ID,
+					Text:        receipt.String(),
+					ParseMode:   models.ParseModeHTML,
+					ReplyMarkup: kb,
+				})
+			}
 		}
 	}
 }
@@ -158,5 +177,48 @@ func (h *Handler) ClearCartCallbackHandler(ctx context.Context, b *bot.Bot, upda
 				ReplyMarkup: kb,
 			})
 		}
+	}
+}
+
+func (h *Handler) CheckoutCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if update.CallbackQuery != nil {
+		b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
+			CallbackQueryID: update.CallbackQuery.ID,
+		})
+
+		telegramID := update.CallbackQuery.From.ID
+		username := update.CallbackQuery.From.Username
+		if username == "" {
+			username = "Скрыт (писать по ID)"
+		} else {
+			username = "@" + username
+		}
+		orderID, err := h.repo.CreateOrderFromCart(ctx, int(telegramID), username)
+		if err != nil {
+			log.Printf("[CheckoutCallback] Error: %v", err)
+			b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
+				CallbackQueryID: update.CallbackQuery.ID,
+				Text:            "❌ Ошибка оформления заказа. Корзина пуста?",
+				ShowAlert:       true,
+			})
+			return
+		}
+		clientMsg := fmt.Sprintf("✅ <b>Ваш заказ №%d успешно оформлен!</b>\n\nНаш менеджер скоро свяжется с вами для уточнения деталей доставки.", orderID)
+		var kb models.InlineKeyboardMarkup
+		kb.InlineKeyboard = [][]models.InlineKeyboardButton{
+			{
+				{
+					Text:         "🏠 Главное меню",
+					CallbackData: "main_menu",
+				},
+			},
+		}
+		b.EditMessageText(ctx, &bot.EditMessageTextParams{
+			ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
+			MessageID:   update.CallbackQuery.Message.Message.ID,
+			Text:        clientMsg,
+			ParseMode:   models.ParseModeHTML,
+			ReplyMarkup: kb,
+		})
 	}
 }

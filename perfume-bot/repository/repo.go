@@ -75,6 +75,48 @@ func (r *Repository) ClearCart(ctx context.Context, telegram_id int64) error {
 	return nil
 }
 
+func (r *Repository) CreateOrderFromCart(ctx context.Context, telegramID int, username string) (int, error) {
+	rows, err := r.db.Query(ctx, querySelectItemsFromCart, telegramID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create order: %w", err)
+	}
+
+	var order []models.OrderProduct
+	totalPrice := 0
+
+	for rows.Next() {
+		var p models.OrderProduct
+
+		err := rows.Scan(&p.Id, &p.Price, &p.Quantity)
+		if err != nil {
+			return 0, fmt.Errorf("failed to scan cart row: %w", err)
+		}
+		order = append(order, p)
+		totalPrice += p.Price * p.Quantity
+	}
+	if len(order) == 0 {
+		return 0, fmt.Errorf("cart is empty")
+	}
+
+	var orderID int
+	err = r.db.QueryRow(ctx, queryCreateOrder, telegramID, username, totalPrice).Scan(&orderID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to insert into orders: %w", err)
+	}
+
+	for _, s := range order {
+		_, err = r.db.Exec(ctx, queryInsertOrderItems, orderID, s.Id, s.Price, s.Quantity)
+		if err != nil {
+			return 0, fmt.Errorf("failed to insert order_item: %w", err)
+		}
+	}
+	_, err = r.db.Exec(ctx, queryClearCart, telegramID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to clear user cart: %w", err)
+	}
+	return orderID, nil
+}
+
 func (r *Repository) GetAllProductsPage(
 	ctx context.Context,
 	limit int,
@@ -467,6 +509,69 @@ func (r *Repository) DeleteCategory(ctx context.Context, id int) error {
 	rowsAffected := res.RowsAffected()
 	if rowsAffected == 0 {
 		return fmt.Errorf("category with id %d not found", id)
+	}
+	return nil
+}
+
+func (r *Repository) GetAdminOrders(ctx context.Context, limit int, offset int) ([]models.Order, int, error) {
+	rows, err := r.db.Query(ctx, queryGetAdminOrders, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get orders: %w", err)
+	}
+	orders := make([]models.Order, 0)
+	for rows.Next() {
+		var o models.Order
+		err := rows.Scan(&o.ID, &o.TelegramID, &o.Username, &o.TotalPrice, &o.Status, &o.Created_at)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to scan order row: %w", err)
+		}
+		orders = append(orders, o)
+	}
+	var totalOrders int
+	err = r.db.QueryRow(ctx, `SELECT COUNT(*) FROM orders`).Scan(&totalOrders)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count orders: %w", err)
+	}
+	return orders, totalOrders, nil
+}
+
+func (r *Repository) GetAdminOrder(
+	ctx context.Context, orderID int,
+) ([]models.OrderItemDetail, error) {
+	rows, err := r.db.Query(ctx, queryGetAdminOrder, orderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get orders items: %w", err)
+	}
+	items := make([]models.OrderItemDetail, 0)
+	for rows.Next() {
+		var item models.OrderItemDetail
+		err := rows.Scan(
+			&item.ProductID,
+			&item.Title,
+			&item.BrandName,
+			&item.PriceAtPurchase,
+			&item.Quantity,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan items: %w", err)
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+func (r *Repository) UpdateOrderStatus(
+	ctx context.Context,
+	orderID int,
+	status string,
+) error {
+	res, err := r.db.Exec(ctx, queryUpdateOrderStatus, status, orderID)
+	if err != nil {
+		return fmt.Errorf("failed to update order status %d: %w", orderID, err)
+	}
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("order with id %d not found", orderID)
 	}
 	return nil
 }

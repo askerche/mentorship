@@ -103,3 +103,22 @@ const queryCreateCategory = `INSERT INTO categories (title)VALUES ($1) RETURNING
 const queryDeleteCategory = `DELETE FROM category WHERE id = $1`
 const queryUpdateCategory = `UPDATE categories SET title = $1 WHERE id = $2`
 const queryClearCart = `DELETE FROM cart_items WHERE telegram_id = $1`
+const querySelectItemsFromCart = `
+								SELECT p.id, p.price, c.quantity
+								FROM cart_items c 
+								JOIN products p 
+								ON c.product_id = p.id 
+								WHERE c.telegram_id = $1`
+const queryCreateOrder = `INSERT INTO orders (telegram_id, username, total_price) VALUES ($1, $2, $3) RETURNING id`
+const queryInsertOrderItems = `INSERT INTO order_items (order_id, product_id, price_at_purchase, quantity)
+ VALUES ($1, $2, $3, $4)`
+const queryGetAdminOrders = `SELECT id, telegram_id, username, total_price, status, created_at FROM orders
+							 ORDER BY created_at DESC LIMIT $1 OFFSET $2`
+const queryGetAdminOrder = `
+							SELECT oi.id, p.title, b.title, oi.price_at_purchase, oi.quantity
+ 							FROM order_items oi
+							JOIN products p ON oi.product_id = p.id
+							JOIN brands b ON p.brand_id = b.id
+							WHERE oi.order_id = $1
+							`
+const queryUpdateOrderStatus = `UPDATE orders SET status = $1 WHERE id = $2`

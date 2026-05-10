@@ -70,6 +70,7 @@ func main() {
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "main_menu", bot.MatchTypeExact, updatesHandler.StartHandler)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "cart", bot.MatchTypeExact, updatesHandler.CartCallbackHandler)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "cart_clear", bot.MatchTypeExact, updatesHandler.ClearCartCallbackHandler)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "checkout", bot.MatchTypeExact, updatesHandler.CheckoutCallbackHandler)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "catalog:", bot.MatchTypePrefix, updatesHandler.CatalogCallbackHandler)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "categories", bot.MatchTypeExact, updatesHandler.CategoriesCallbackHandler)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "brands:", bot.MatchTypePrefix, updatesHandler.BrandsCallbackHandler)

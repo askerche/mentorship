@@ -41,11 +41,15 @@ func (s *ApiServer) Run() error {
 	router.PUT("/api/categories/:id", s.UpdateCategoryHandler)
 	router.DELETE("/api/categories/:id", s.DeleteCategoryHandler)
 
+	router.GET("/api/orders", s.GetOrdersHandler)
+	router.GET("/api/orders/:id", s.GetOrderHandler)
+	router.PATCH("/api/orders/:id/status", s.UpdateOrderStatusHandler)
+
 	router.POST("/upload", s.UploadHandler)
 
 	router.StaticFile("/admin", "./static/admin.html")
 
-	return router.Run(":8181")
+	return router.Run(":8080")
 }
 
 func (s *ApiServer) HealthCheckHandler(c *gin.Context) {

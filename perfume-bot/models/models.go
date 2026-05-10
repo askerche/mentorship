@@ -51,3 +51,30 @@ type CreateBrandRequest struct {
 type CreateCategoryRequest struct {
 	Title string `json:"title"`
 }
+
+type OrderProduct struct {
+	Id       int64
+	Price    int
+	Quantity int
+}
+
+type Order struct {
+	ID         int       `json:"id"`
+	TelegramID int64     `json:"telegram_id"`
+	Username   string    `json:"username"`
+	TotalPrice int       `json:"total_price"`
+	Status     string    `json:"status"`
+	Created_at time.Time `json:"created_at"`
+}
+
+type OrderItemDetail struct {
+	ProductID       int    `json:"product_id"`
+	Title           string `json:"title"`
+	BrandName       string `json:"brand_name"`
+	PriceAtPurchase int    `json:"price_at_purchase"`
+	Quantity        int    `json:"quantity"`
+}
+
+type StatusRequest struct {
+	Status string `json:"status"`
+}
