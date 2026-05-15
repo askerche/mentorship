@@ -68,6 +68,7 @@ func (s *ApiServer) GetProductsHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Ошибка при получении общего количества товаров",
 		})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{

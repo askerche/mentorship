@@ -22,7 +22,7 @@ func (s *ApiServer) GetBrandsHandler(c *gin.Context) {
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil || offset < 0 {
-		limit = 0
+		offset = 0
 	}
 
 	brands, err := s.repo.GetBrandsPage(c, limit, offset)

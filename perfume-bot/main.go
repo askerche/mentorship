@@ -51,10 +51,10 @@ func main() {
 
 	apiServer := api.New(repo, fileClient)
 	go func() {
-		log.Println("API сервер запущен на порту :8181")
+		log.Println("API сервер запущен на порту :8080")
 		err := apiServer.Run()
 		if err != nil {
-			log.Fatal("Ошибка API сервера: %v", err)
+			log.Fatalf("Ошибка API сервера: %v", err)
 		}
 	}()
 

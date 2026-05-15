@@ -105,7 +105,7 @@ func (s *ApiServer) UpdateOrderStatusHandler(c *gin.Context) {
 
 	err = s.repo.UpdateOrderStatus(c, orderID, status.Status)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Ошибка при обновлении статуса заказа",
 		})
 		return
