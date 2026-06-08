@@ -10,13 +10,22 @@ import (
 
 	"github.com/go-telegram/bot"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	aladhanClient := aladhan.New()
+	redisAddr := os.Getenv("REDIS_ADDR")
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     redisAddr,
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+	defer rdb.Close()
+
+	aladhanClient := aladhan.New(rdb)
 	botHandler := handler.New(aladhanClient)
 
 	opts := []bot.Option{

@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: perfume_bot_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-perfume}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  minio:
+    image: minio/minio:latest
+    container_name: perfume_minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: "admin"
+      MINIO_ROOT_PASSWORD: "password123"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001" 
+
+  bot:
+    build: .
+    container_name: perfume_bot_app
+    restart: unless-stopped
+    ports: 
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    env_file:
+      - .env
+
+volumes:
+  pgdata:
+  minio_data:
